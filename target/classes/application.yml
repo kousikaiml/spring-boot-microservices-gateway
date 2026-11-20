@@ -1,0 +1,29 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: microservices-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: catalog
+          uri: ${CATALOG_URL:http://localhost:8081}
+          predicates: [Path=/catalog/**]
+          filters:
+            - StripPrefix=1
+            - name: CircuitBreaker
+              args:
+                name: catalogCircuit
+                fallbackUri: forward:/fallback/catalog
+        - id: orders
+          uri: ${ORDERS_URL:http://localhost:8082}
+          predicates: [Path=/orders/**]
+          filters: [StripPrefix=1]
+app:
+  jwt:
+    secret: ${JWT_SECRET:local-demo-secret-change-me-32chars}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
